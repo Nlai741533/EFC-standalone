@@ -7,6 +7,10 @@ description: "Systematically fact-check AI-generated research reports and data-h
 
 A structured workflow for verifying AI-generated research reports against primary sources. Designed to catch the specific failure modes that LLM agents produce when doing web research at scale.
 
+## Requirements
+
+This skill produces the best results when the agent can **browse the web and open source URLs**. If browsing is unavailable, the skill degrades to an **internal consistency review** (cross-checking figures within the document, verifying table totals, flagging unsupported claims). In that mode, all external claims should be marked "unverifiable — no source access" rather than given a confident verdict.
+
 ## When to Use
 
 Trigger when the user:
@@ -46,7 +50,7 @@ Different metrics from different sources merged as if they're the same. "GMV" tr
 
 Data from an earlier period presented as the latest, or forecasts presented as actual results.
 
-**Detect:** Check source date vs. the period it describes. If a source from Feb 2026 discusses "2025 results," it's likely estimates, not filings.
+**Detect:** Check source date vs. the period it describes. If a source from Feb 2026 discusses "2025 results," it's likely estimates, not filings. Note: freshness thresholds vary by domain — quarterly financials age fast; census data is valid for years. Flag the source date and let the reader judge.
 
 ### 5. Attribution Laundering
 
@@ -82,7 +86,15 @@ For each P0/P1 claim:
 4. Compare reported value vs. source value
 5. If discrepancy: is it rounding, unit error, or fabrication?
 
-**Source hierarchy:** Company filings → Official statistics → Analyst research → Company IR/press → Tier-1 media → Everything else
+**Source hierarchy (adjust for domain):**
+
+| Domain | Primary sources |
+|---|---|
+| Company financials | SEC/stock exchange filings, IR pages |
+| Market data | Government statistics, central banks, customs |
+| Science | Peer-reviewed journals, DOI-linked papers |
+| Policy | Legislation, regulatory databases, official gazettes |
+| General | Official press releases, company statements |
 
 ### Step 3.5: Verify Qualitative Claims
 
@@ -95,7 +107,7 @@ Apply the **dual-source confirmation rule:**
 | Third party | Media report, data platform | Confirms visibility |
 
 Minimum standard:
-- Official + Counterpart = Confirmed ✅
+- Official + Counterpart = Event confirmed (surrounding claims still need separate verification) ✅
 - Official only = "Per company statement, not independently confirmed" ⚠️
 - Single media report = "Unverified" ⚠️
 - Zero sources = Remove or flag ❌
@@ -128,18 +140,34 @@ For every cited source:
 **Date:** [Date]  |  **Coverage:** [What was checked]
 
 ### ✅ Verified
-| Claim | Source | Status |
+| Claim | Source | Source Type | Source Date | Retrieved | Status |
+|---|---|---|---|---|---|
+| [Exact claim] | [URL] | primary/secondary/tertiary | [YYYY-MM-DD] | [YYYY-MM-DD] | Confirmed |
 
 ### ❌ Errors Found
-| Claim | Reported | Actual | Failure Mode | Impact |
+| Claim | Reported | Actual | Failure Mode | Source | Impact |
+|---|---|---|---|---|---|
+| [Exact claim] | [Wrong value] | [Correct value] | [Mode] | [Correction URL] | High/Med/Low |
 
 ### ⚠️ Unverifiable
 | Claim | Reason | Recommendation |
+|---|---|---|
+| [Claim] | [Why unverifiable] | Flag/remove/hedge |
 
 ### Summary
 - X verified | Y errors (Z high impact) | W unverifiable
+- Source coverage: [X%] of P0/P1 claims have primary or secondary sources
 - Overall reliability: High / Medium / Low
 ```
+
+### Fallback: No Web Access
+
+If the agent cannot browse the web or open URLs, shift to **internal consistency review**:
+1. Cross-check figures against each other within the document (tables, charts, text)
+2. Verify sub-items sum to totals
+3. Check that growth rates match absolute changes
+4. Flag every external claim as "unverifiable — no source access"
+5. Still produce a report, but label it "Internal consistency review only"
 
 ## Product and Service Claims: Special Protocol
 
@@ -157,7 +185,7 @@ For every cited source:
 **Rule:** If a claim sounds impressive and appears ONLY in company-owned channels, it's marketing — not verified fact.
 
 ### Data Freshness
-Performance data degrades quickly. A 2024 figure is stale in a 2026 report. If data is >6 months old, state the vintage: "As of [date], [metric] was [value]."
+Performance data degrades quickly. Flag the source date for every figure. What counts as "stale" varies by domain: quarterly financials are stale after one quarter; census data is valid for years. Always state the vintage: "As of [date], [metric] was [value]."
 
 ## Prompt-Injection Defense
 
@@ -187,4 +215,4 @@ Before signing off:
 - [ ] Honest about what could NOT be verified, not just what could
 - [ ] Pricing checked against official sources
 - [ ] Marketing claims labeled, not presented as verified facts
-- [ ] Performance data dated with source vintage
+- [ ] Source date stated for every data point

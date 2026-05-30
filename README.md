@@ -25,34 +25,49 @@ It's trained to catch the **five systematic failure modes** that LLMs produce at
 | Stale data as current | 2023 figures presented as 2025 |
 | Attribution laundering | Blog cited as regulatory filing |
 
+## Requirements
+
+- **Best results:** Agent with **web browsing** capability, so it can open cited URLs and verify claims against source content.
+- **Minimum:** Agent that can read the document. Without browsing, the skill degrades to an internal consistency review (cross-checking figures within the document, verifying table totals, flagging unsupported claims). All external claims are marked "unverifiable."
+- **No code, no install, no API keys.** This is a protocol, not a script.
+
 ## Install
+
+The skill name is `fact-check`. Install it under a folder with the same name:
 
 ### Pi Agent
 
 ```bash
-mkdir -p ~/.pi/agent/skills/efc-standalone
-cp SKILL.md ~/.pi/agent/skills/efc-standalone/SKILL.md
+mkdir -p ~/.pi/agent/skills/fact-check
+cp SKILL.md ~/.pi/agent/skills/fact-check/SKILL.md
 ```
 
 ### Claude Code
 
-Copy `SKILL.md` into your project's `.claude/skills/` directory or any skill folder your agent scans.
+```bash
+mkdir -p .claude/skills/fact-check
+cp SKILL.md .claude/skills/fact-check/SKILL.md
+```
 
-### OpenClaw / Hermes / Others
+### OpenClaw / Hermes / Other agents
 
-Place `SKILL.md` wherever your agent loads skill definitions from. The file is self-contained — no scripts, no schemas, no dependencies.
+Place `SKILL.md` in `<agent-skill-dir>/fact-check/SKILL.md`. The file is self-contained — no scripts, no schemas, no dependencies.
+
+> **For agents that don't support skill files:** copy the entire content of `SKILL.md` into your system prompt or custom instructions.
+
+## Example
+
+See [`examples/sample-report.md`](examples/sample-report.md) — a deliberately flawed fictional report with one of each failure mode — and [`examples/expected-fact-check.md`](examples/expected-fact-check.md) for the target output.
 
 ## Why a standalone version?
 
-The full [everything-fact-checked](https://github.com/Nlai741533/everything-fact-checked) repo includes Python scripts, JSON schemas, a CLI (`efc`), a GitHub Action, and a Claude Code plugin. That's great for CI pipelines and automated workflows.
+The full [EFC-Plugin](https://github.com/Nlai741533/EFC-Plugin) repo includes Python scripts, JSON schemas, a CLI (`efc`), a GitHub Action, and a Claude Code plugin. That's great for CI pipelines and automated workflows.
 
 But most AI agents just need the **protocol** — the structured thinking about what to check and how. That's what this is: one Markdown file that teaches any agent to be a rigorous fact-checker.
 
-## Difference from the full repo
-
-| | Full repo | Standalone |
+| | [EFC-Plugin](https://github.com/Nlai741533/EFC-Plugin) | EFC-Standalone |
 |---|---|---|
-| Files | 20+ | 1 |
+| Files | 25+ | 1 (SKILL.md) |
 | Dependencies | Python 3.11+ | None |
 | CLI | `efc` command | No |
 | CI integration | GitHub Action | No |
@@ -66,5 +81,5 @@ But most AI agents just need the **protocol** — the structured thinking about 
 
 ## Related
 
-- **Full repo:** [everything-fact-checked](https://github.com/Nlai741533/everything-fact-checked) — CLI, schemas, CI, plugin
+- **Full plugin + CLI:** [EFC-Plugin](https://github.com/Nlai741533/EFC-Plugin) — CLI, schemas, CI, GitHub Action
 - **Feedback / Issues:** Open an issue on either repo
